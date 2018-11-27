@@ -1,8 +1,17 @@
-from PyQt5.QtWidgets import QWidget, QFormLayout, QLabel, QLineEdit, QComboBox, QPushButton
+from PyQt5.QtWidgets import (
+    QWidget,
+    QFormLayout,
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QPushButton,
+)
 from PyQt5.QtCore import pyqtSignal
 
 from window import Window
 from rectangle import Rectangle
+from display import Display
+
 
 class Form(QWidget):
     selected = pyqtSignal(int)
@@ -12,12 +21,17 @@ class Form(QWidget):
 
         self.t = False
 
+        self.preview = None
+
         self.layout = QFormLayout()
 
         self.nameEdit = QLineEdit()
         self.feedback = QLabel()
-        self.select   = QComboBox()
-        self.button   = QPushButton()
+        self.select = QComboBox()
+        self.button = QPushButton()
+
+        self.nameEdit.setText("")
+        self.selectParent()
 
         self.nameEdit.returnPressed.connect(self.selectParent)
         self.select.currentIndexChanged.connect(self.highlightWindow)
@@ -53,17 +67,21 @@ class Form(QWidget):
     def highlightWindow(self):
         handle = int(self.select.currentText())
         self.w = Window(handle=handle)
-        self.rectangle = Rectangle(self.w.x, self.w.y, self.w.width, self.w.height)
+
+        if self.preview:
+            self.preview.setWindow(self.w)
+        else:
+            self.preview = Display(self.w)
 
     def clickWindow(self):
         if not self.w:
             return
+
+        self.w.getContent()
+        return
 
         if not self.t:
             self.startTimer(1000)
             self.t = True
 
         self.w.click(100, 100)
-
-    def timerEvent(self, event):
-        self.w.click(self.w.width // 2, self.w.height // 2)
